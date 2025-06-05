@@ -1,23 +1,22 @@
 from subprocess import run
 from os import getenv
 from pathlib import Path
-from tempfile import NamedTemporaryFile
 from sys import argv
 from emberjson import *
 
 
 fn get_active_window() -> String:
-    APP_TABLE: OwnedKwargsDict[String, String] = {
-        "dev.warp.Warp": "warp",
-        "steam": "steam",
-        "tidal-hifi": "tidal",
-        "dev.zed.Zed": "zed",
-        "dev.zed.Zed-Preview": "zed",
-        "com.mitchellh.ghostty": "ghostty"
-    }
+    # would like this to be a dict when they support String indexs
+    APP_TABLE: List[String] = [
+        "dev.warp.Warp"
+        "steam"
+        "tidal-hifi"
+        "dev.zed.Zed"
+        "dev.zed.Zed-Preview"
+        "com.mitchellh.ghostty"
+    ]
     try:
         hyprctl = run("hyprctl activewindow -j")
-        print(hyprctl)
         active = parse(hyprctl).object()
 
         if (
@@ -25,51 +24,36 @@ fn get_active_window() -> String:
             and not active["initialTitle"].string()
         ):
             print("No active window found")
-
-        menu = ""
-        if active["initialClass"].string() in APP_TABLE:
-            val = active["initialClass"].string()
-            print(val)
-            menu = APP_TABLE.get(ascii(val))
+            return String("quickmenu")
+        elif active["initialClass"].string() in APP_TABLE:
+            return APP_TABLE[APP_TABLE.index(active["initialClass"].string())]
         elif active["initialTitle"].string() in APP_TABLE:
-
-            val =  active["initialTitle"].string()
-            print(val)
-            menu = APP_TABLE[active["initialTitle"].string()]
+            return APP_TABLE[APP_TABLE.index(active["initialTitle"].string())]
         else:
-            for app in APP_TABLE.keys():
-                if active["initialClass"].string() in app:
-                    return APP_TABLE[app]
-                elif active["initialTitle"].string() in app:
-                    return APP_TABLE[app]
-                    break
-        return menu
+            return String("quickmenu")
     except:
-        return "quick_menu"
+        return String("quickmenu")
 
 
 fn hyprmenu(get_window: Bool = False) -> None:
-    ANYRUN_STDIO: String = (
+    STDIO_RUNNER: String = (
         "| anyrun --plugins libstdin.so --show-results-immediately true"
         " --max-entries 5 "
     )
     HOME = getenv("HOME")
-    if get_window:
-        _menu = get_active_window()
-        _menu_path: Path = (
-            Path(HOME)
-            .joinpath(".config/hypr/hyprmenu/")
-            .joinpath(_menu)
-            .joinpath(".txt")
-        )
-    else:
-        _menu_path: Path = Path(HOME).joinpath(
-            ".config/hypr/hyprmenu/quickmenu.txt"
-        )
     try:
+        if get_window:
+            _menu = get_active_window()
+            _menu_path: Path = Path(HOME).joinpath(
+                String(".config/hypr/hyprmenu/{}.txt").format(_menu)
+            )
+        else:
+            _menu_path: Path = Path(HOME).joinpath(
+                ".config/hypr/hyprmenu/quickmenu.txt"
+            )
         with open(_menu_path, "r") as buff:
-            selected_cmd = run("echo " + "'" + buff.read() + "'" + ANYRUN_STDIO)
-        run(selected_cmd)
+            selected_cmd = run("echo " + "'" + buff.read() + "'" + STDIO_RUNNER)
+            run(selected_cmd)
     except:
         print("No menu found for this window")
 
