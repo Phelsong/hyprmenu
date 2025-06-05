@@ -25,7 +25,6 @@ fn get_active_window() -> String:
             print("No active window found")
             return String("quickmenu")
         elif active["initialClass"].string() in APP_TABLE:
-            print(APP_TABLE[APP_TABLE.index(active["initialClass"].string())])
             return APP_TABLE[APP_TABLE.index(active["initialClass"].string())]
         elif active["initialTitle"].string() in APP_TABLE:
             return APP_TABLE[APP_TABLE.index(active["initialTitle"].string())]
