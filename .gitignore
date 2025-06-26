@@ -3,6 +3,7 @@ build/*
 # pixi environments
 .pixi
 *.egg-info
+pixi.lock
 # magic environments
 .magic
 magic.lock

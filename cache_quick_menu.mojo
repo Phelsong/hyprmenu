@@ -1,7 +1,7 @@
 from pathlib import Path
 from os import getenv
 
-# NOT PORTED YET
+# !! NOT PORTED YET
 
 def cache_quick_menu():
     HOME = getenv("HOME")

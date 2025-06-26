@@ -34,31 +34,46 @@ fn get_active_window() -> String:
         return String("quickmenu")
 
 
-fn hyprmenu(get_window: Bool = False) -> None:
+fn select_cmd(menu_path: Path, script_path: Path) -> String:
     STDIO_RUNNER: String = (
         "| anyrun --plugins libstdin.so --show-results-immediately true"
         " --max-entries 5 "
     )
-    HOME = getenv("HOME")
+    try:
+        with open(menu_path, "r") as buff:
+            return String(
+                script_path.joinpath(
+                    run("echo " + "'" + buff.read() + "'" + STDIO_RUNNER)
+                )
+            )
+    except:
+        return String("echo 'error'")
+    return String("echo 'error'")
+
+
+fn hyprmenu(get_window: Bool = False) -> None:
+    HOME: Path = getenv("HOME")
+    SCRIPT_PATH: Path = HOME.joinpath(".config/hypr/hyprmenu/quickmenu")
     try:
         if get_window:
             _menu = get_active_window()
-            _menu_path: Path = Path(HOME).joinpath(
+            _menu_path: Path = HOME.joinpath(
                 String(".config/hypr/hyprmenu/{}.txt").format(_menu)
             )
         else:
-            _menu_path: Path = Path(HOME).joinpath(
+            _menu_path: Path = HOME.joinpath(
                 ".config/hypr/hyprmenu/quickmenu.txt"
             )
-        with open(_menu_path, "r") as buff:
-            selected_cmd = run("echo " + "'" + buff.read() + "'" + STDIO_RUNNER)
-            run(selected_cmd)
+
+        cmd = select_cmd(_menu_path, SCRIPT_PATH)
+        # add some validation here
+        run(cmd)
     except:
         print("No menu found for this window")
 
 
 fn main() -> None:
-    if len(argv()) < 1:
-        hyprmenu()
-    else:
+    if len(argv()) <= 1:
         hyprmenu(True)
+    else:
+        hyprmenu()
