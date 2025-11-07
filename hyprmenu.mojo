@@ -1,5 +1,6 @@
 from subprocess import run
 from os import getenv
+from testing import assert_true
 from pathlib import Path
 from sys import argv
 from emberjson import *
@@ -14,6 +15,7 @@ fn get_active_window() -> String:
         "dev.zed.Zed",
         "dev.zed.Zed-Preview",
         "com.mitchellh.ghostty",
+        # "kitty"
     ]
     try:
         hyprctl = run("hyprctl activewindow -j")
@@ -40,18 +42,19 @@ fn select_cmd(menu_path: Path, script_path: Path) -> String:
         " --max-entries 5 "
     )
     try:
+        print(menu_path)
         with open(menu_path, "r") as buff:
+            param = run("echo " + "'" + buff.read() + "'" + STDIO_RUNNER)
+            print(param)
             return String(
-                script_path.joinpath(
-                    run("echo " + "'" + buff.read() + "'" + STDIO_RUNNER)
-                )
+                script_path.joinpath(param)
             )
     except:
-        return String("echo 'error'")
-    return String("echo 'error'")
+        return String("error")
+    return String("error")
 
 
-fn hyprmenu(get_window: Bool = False) -> None:
+fn hyprmenu(get_window: Bool = False, menu: String="quick") -> None:
     HOME: Path = getenv("HOME")
     SCRIPT_PATH: Path = HOME.joinpath(".config/hypr/hyprmenu/quickmenu")
     try:
@@ -60,13 +63,21 @@ fn hyprmenu(get_window: Bool = False) -> None:
             _menu_path: Path = HOME.joinpath(
                 String(".config/hypr/hyprmenu/{}.txt").format(_menu)
             )
+        elif menu != "quick":
+            print(menu)
+            _menu_path: Path = HOME.joinpath(
+                String(".config/hypr/hyprmenu/{}.txt").format(menu)
+            )
         else:
             _menu_path: Path = HOME.joinpath(
                 ".config/hypr/hyprmenu/quickmenu.txt"
             )
+        
 
-        cmd = select_cmd(_menu_path, SCRIPT_PATH)
+        cmd: String = select_cmd(_menu_path, SCRIPT_PATH)
         # add some validation here
+        print(cmd)
+        assert_true(cmd) 
         run(cmd)
     except:
         print("No menu found for this window")
@@ -76,4 +87,7 @@ fn main() -> None:
     if len(argv()) <= 1:
         hyprmenu(True)
     else:
-        hyprmenu()
+        if argv()[1] == "quick":
+            hyprmenu()
+        else:
+            hyprmenu(menu=argv()[1])
